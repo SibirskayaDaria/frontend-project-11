@@ -10,6 +10,13 @@ import ru from './ru.js';
 import render from './view.js';
 import parse from './rssparser.js';
 
+const timeout = 5000;
+
+const validate = (url, links) => {
+    const schema = string().trim().required().url()
+      .notOneOf(links);
+    return schema.validate(url);
+  };
 const app = () => {
   const i18nInstance = i18next.createInstance();
   // Инициализация
@@ -47,6 +54,26 @@ const app = () => {
     const addPosts = (feedId, posts, state) => {
       const preparedPosts = posts.map((post) => ({ ...post, feedId, id: uniqueId() }));
       state.content.posts = [...state.content.posts, ...preparedPosts];
+    };
+
+    const fetchNewPosts = (state) => {
+      const timeout = 5000; // Установите желаемое значение timeout
+
+      const promises = state.content.feeds
+        .map(({ link, id }) => getAxiosResponse(link)
+          .then((response) => {
+            const { posts } = parse(response.data.contents);
+            const alreadyAddedLinks = state.content.posts.map((post) => post.link);
+            const newPosts = posts.filter((post) => !alreadyAddedLinks.includes(post.link));
+            if (newPosts.length > 0) {
+              addPosts(id, newPosts, state);
+            }
+            return Promise.resolve();
+          }));
+      Promise.allSettled(promises)
+        .finally(() => {
+          setTimeout(() => fetchNewPosts(state), timeout);
+        });
     };
 
     // Установка локали для yup
