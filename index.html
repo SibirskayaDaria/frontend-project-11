@@ -8,8 +8,6 @@
       content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
     />
     <title>Hexlet Frontend Project</title>
-    <!-- Подключение Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   </head>
   <body class="d-flex flex-column min-vh-100">
     <div
@@ -60,13 +58,14 @@
             <p class="lead">
               Начните читать RSS сегодня! Это легко, это красиво.
             </p>
-            <form action="#" class="rss-form text-body" onsubmit="return validateForm()">
+            <form action class="rss-form text-body">
               <div class="row">
                 <div class="col">
                   <div class="form-floating">
                     <input
                       id="url-input"
                       autofocus
+                      required
                       name="url"
                       aria-label="url"
                       class="form-control w-100"
@@ -114,3 +113,4 @@
     <script src="main.js"></script>
   </body>
 </html>
+        

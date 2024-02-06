@@ -1,25 +1,65 @@
+/* eslint no-param-reassign: ["error", { "props": true,
+"ignorePropertyModificationsFor": ["state", "elements", "watchedState"] }] */
+
 import './styles.scss';
 import 'bootstrap';
-import i18next from 'i18next';
-import axios from 'axios';
-import * as yup from 'yup';
+import { setLocale, string } from 'yup';
 import { uniqueId } from 'lodash';
 import onChange from 'on-change';
+import i18n from 'i18next';
+import axios from 'axios';
 
-import ru from './ru.js';
+import ru from './locales/ru.js';
 import render from './view.js';
 import parse from './rssparser.js';
 
 const timeout = 5000;
 
+// rss для тестирования
+// https://lorem-rss.herokuapp.com/feed?unit=second&interval=5
+
+// Валидатор
 const validate = (url, links) => {
   const schema = string().trim().required().url()
     .notOneOf(links);
   return schema.validate(url);
 };
 
+// Запрос
+const getAxiosResponse = (url) => {
+  const allOriginsLink = 'https://allorigins.hexlet.app/get';
+  const preparedURL = new URL(allOriginsLink);
+  preparedURL.searchParams.set('disableCache', 'true');
+  preparedURL.searchParams.set('url', url);
+  return axios.get(preparedURL);
+};
+
+const addPosts = (feedId, posts, state) => {
+  const preparedPosts = posts.map((post) => ({ ...post, feedId, id: uniqueId() }));
+  state.content.posts = [...state.content.posts, ...preparedPosts];
+};
+
+const fetchNewPosts = (state) => {
+  const promises = state.content.feeds
+    .map(({ link, id }) => getAxiosResponse(link)
+      .then((response) => {
+        const { posts } = parse(response.data.contents);
+        const alreadyAddedLinks = state.content.posts.map((post) => post.link);
+        const newPosts = posts.filter((post) => !alreadyAddedLinks.includes(post.link));
+        if (newPosts.length > 0) {
+          addPosts(id, newPosts, state);
+        }
+        return Promise.resolve();
+      }));
+  Promise.allSettled(promises)
+    .finally(() => {
+      setTimeout(() => fetchNewPosts(state), timeout);
+    });
+};
+
+// Приложение
 const app = () => {
-  const i18nInstance = i18next.createInstance();
+  const i18nInstance = i18n.createInstance();
   // Инициализация
   i18nInstance.init({
     lng: 'ru',
@@ -28,6 +68,7 @@ const app = () => {
       ru,
     },
   }).then((translate) => {
+    // Элементы
     const elements = {
       form: document.querySelector('.rss-form'),
       feedback: document.querySelector('.feedback'),
@@ -43,44 +84,9 @@ const app = () => {
       },
     };
 
-    // Запрос
-    const getAxiosResponse = (url) => {
-      const allOriginsLink = 'https://allorigins.hexlet.app/get';
-      const preparedURL = new URL(allOriginsLink);
-      preparedURL.searchParams.set('disableCache', 'true');
-      preparedURL.searchParams.set('url', url);
-      return axios.get(preparedURL);
-    };
-
-    const addPosts = (feedId, posts, state) => {
-      const preparedPosts = posts.map((post) => ({ ...post, feedId, id: uniqueId() }));
-      state.content.posts = [...state.content.posts, ...preparedPosts];
-    };
-
-    const fetchNewPosts = (state) => {
-      const timeout = 5000; // Установите желаемое значение timeout
-
-      const promises = state.content.feeds
-        .map(({ link, id }) => getAxiosResponse(link)
-          .then((response) => {
-            const { posts } = parse(response.data.contents);
-            const alreadyAddedLinks = state.content.posts.map((post) => post.link);
-            const newPosts = posts.filter((post) => !alreadyAddedLinks.includes(post.link));
-            if (newPosts.length > 0) {
-              addPosts(id, newPosts, state);
-            }
-            return Promise.resolve();
-          }));
-      Promise.allSettled(promises)
-        .finally(() => {
-          setTimeout(() => fetchNewPosts(state), timeout);
-        });
-    };
-
-    // Установка локали для yup
-    yup.setLocale({
-      mixed: { notOneOf: translate('errors.alreadyAddedRSS') },
-      string: { url: translate('errors.invalidUrl'), required: translate('errors.mustNotBeEmpty') },
+    setLocale({
+      mixed: { notOneOf: 'alreadyAddedRSS' },
+      string: { url: 'invalidUrl', required: 'mustNotBeEmpty' },
     });
 
     // Состояние
