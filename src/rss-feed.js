@@ -9,7 +9,7 @@ import onChange from 'on-change';
 import i18n from 'i18next';
 import axios from 'axios';
 
-import ru from './locales/ru.js';
+import ru from './ru.js';
 import render from './view.js';
 import parse from './rssparser.js';
 
