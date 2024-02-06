@@ -13,10 +13,11 @@ import parse from './rssparser.js';
 const timeout = 5000;
 
 const validate = (url, links) => {
-    const schema = string().trim().required().url()
-      .notOneOf(links);
-    return schema.validate(url);
-  };
+  const schema = string().trim().required().url()
+    .notOneOf(links);
+  return schema.validate(url);
+};
+
 const app = () => {
   const i18nInstance = i18next.createInstance();
   // Инициализация
@@ -120,33 +121,4 @@ const app = () => {
           return getAxiosResponse(link);
         })
         .then((response) => {
-          const { feed, posts } = parse(response.data.contents);
-          const feedId = uniqueId();
-
-          watchedState.content.feeds.push({ ...feed, feedId, link: url });
-          addPosts(feedId, posts, watchedState);
-          watchedState.process.state = 'finished';
-        })
-        .catch((error) => {
-          const errorMessage = error.message ?? 'defaultError';
-          watchedState.process.error = errorMessage;
-          watchedState.process.state = 'error';
-        });
-    });
-
-    elements.modal.modalElement.addEventListener('show.bs.modal', (e) => {
-      const postId = e.relatedTarget.getAttribute('data-id');
-      watchedState.uiState.visitedLinksIds.add(postId);
-      watchedState.uiState.modalPostId = postId;
-    });
-
-    elements.posts.addEventListener('click', (e) => {
-      const postId = e.target.dataset.id;
-      if (postId) {
-        watchedState.uiState.visitedLinksIds.add(postId);
-      }
-    });
-  });
-};
-
-export default app;
+          const { feed, posts } = parse(resp
