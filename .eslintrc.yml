@@ -13,9 +13,10 @@ env:
 parser: "@babel/eslint-parser"
 
 extends:
-  - "airbnb-base"
-  - "plugin:jest/recommended"
+  - airbnb-base
+  - plugin:jest/recommended
 
 rules:
-  "no-console": 0
+  no-console: 0
   "import/extensions": 0
+
