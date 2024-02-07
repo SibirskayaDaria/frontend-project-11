@@ -1,3 +1,6 @@
+/* eslint no-param-reassign: ["error", { "props": true,
+"ignorePropertyModificationsFor": ["state", "elements", "watchedState"] }] */
+
 import './styles.scss';
 import 'bootstrap';
 import { setLocale, string } from 'yup';
@@ -6,7 +9,7 @@ import onChange from 'on-change';
 import i18n from 'i18next';
 import axios from 'axios';
 
-import ru from './ru.js';
+import ru from './locales/ru.js';
 import render from './view.js';
 import parse from './rssparser.js';
 
@@ -104,79 +107,53 @@ const app = () => {
 
     const watchedState = onChange(initialState, render(initialState, elements, translate));
 
-    const updatePosts = () => {
-      const { posts } = watchedState;
-      const channelLinks = watchedState.content.feeds.map(({ link }) => link);
+    fetchNewPosts(watchedState);
 
-      const existingPostLinks = posts.map((post) => post.link);
-      const promises = channelLinks.map((channel) => fetchRSSData(channel)
-        .then((rssData) => {
-          const dataP = parseRSSData(rssData.contents, watchedState);
-          const newPosts = dataP.items.filter((item) => !existingPostLinks.includes(item.link));
-          newPosts.forEach((item) => {
-            const newPost = { ...item, id: uniqueId() };
-            // Проверяем, есть ли уже такой пост в массиве
-            if (!existingPostLinks.includes(newPost.link)) {
-              posts.push(newPost);
-              existingPostLinks.push(newPost.link);
-            }
-          });
-          watchedState.process.error = '';
-        })
-        .catch((error) => {
-          console.error(error);
-        }));
-
-      Promise.allSettled(promises)
-        .finally(() => {
-          setTimeout(() => fetchNewPosts(state), timeout);
-        });
-    };
+    elements.form.addEventListener('input', () => {
+      watchedState.process.error = null;
+      watchedState.process.state = 'filling';
+    });
 
     elements.form.focus();
     elements.form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const formData = new FormData(elements.form);
-        const url = formData.get('url');
-        const addedLinks = watchedState.content.feeds.map(({ link }) => link);
-  
-        validate(url, addedLinks)
-          .then((link) => {
-            watchedState.process.state = 'sending';
-            return getAxiosResponse(link);
-          })
-          .then((response) => {
-            const { feed, posts } = parse(response.data.contents);
-            const feedId = uniqueId();
-  
-            watchedState.content.feeds.push({ ...feed, feedId, link: url });
-            addPosts(feedId, posts, watchedState);
-            watchedState.process.state = 'finished';
-          })
-          .catch((error) => {
-            const errorMessage = error.message ?? 'defaultError';
-            watchedState.process.error = errorMessage;
-            watchedState.process.state = 'error';
-          });
-      });
-  
-      elements.modal.modalElement.addEventListener('show.bs.modal', (e) => {
-        const postId = e.relatedTarget.getAttribute('data-id');
-        watchedState.uiState.visitedLinksIds.add(postId);
-        watchedState.uiState.modalPostId = postId;
-      });
-  
-      elements.posts.addEventListener('click', (e) => {
-        const postId = e.target.dataset.id;
-        if (postId) {
-          watchedState.uiState.visitedLinksIds.add(postId);
-        }
-      });
-  
-      // Вызов функции обновления постов
-      updatePosts();
+      e.preventDefault();
+      const formData = new FormData(elements.form);
+      const url = formData.get('url');
+      const addedLinks = watchedState.content.feeds.map(({ link }) => link);
+
+      validate(url, addedLinks)
+        .then((link) => {
+          watchedState.process.state = 'sending';
+          return getAxiosResponse(link);
+        })
+        .then((response) => {
+          const { feed, posts } = parse(response.data.contents);
+          const feedId = uniqueId();
+
+          watchedState.content.feeds.push({ ...feed, feedId, link: url });
+          addPosts(feedId, posts, watchedState);
+          watchedState.process.state = 'finished';
+        })
+        .catch((error) => {
+          const errorMessage = error.message ?? 'defaultError';
+          watchedState.process.error = errorMessage;
+          watchedState.process.state = 'error';
+        });
     });
-  };
-  
-  export default app;
-  
+
+    elements.modal.modalElement.addEventListener('show.bs.modal', (e) => {
+      const postId = e.relatedTarget.getAttribute('data-id');
+      watchedState.uiState.visitedLinksIds.add(postId);
+      watchedState.uiState.modalPostId = postId;
+    });
+
+    elements.posts.addEventListener('click', (e) => {
+      const postId = e.target.dataset.id;
+      if (postId) {
+        watchedState.uiState.visitedLinksIds.add(postId);
+      }
+    });
+  });
+};
+
+export default app;

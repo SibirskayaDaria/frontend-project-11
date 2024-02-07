@@ -27,4 +27,3 @@ const parse = (data) => {
   };
   
   export default parse;
-  
