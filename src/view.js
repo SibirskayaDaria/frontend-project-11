@@ -1,67 +1,60 @@
 /* eslint no-param-reassign: ["error", { "props": true,
 "ignorePropertyModificationsFor": ["state", "elements"] }] */
-
-const createElement = (tag, classNames = []) => {
-  const element = document.createElement(tag);
-  element.classList.add(...classNames);
-  return element;
-};
-
-const createLink = (href, target = '_blank', rel = 'noopener noreferrer', classNames = []) => {
-  const link = createElement('a', classNames);
-  link.href = href;
-  link.target = target;
-  link.rel = rel;
-  return link;
-};
-
-const createButton = (text, onClick, classNames = []) => {
-  const button = createElement('button', ['btn', 'btn-outline-primary', 'btn-sm', ...classNames]);
-  button.type = 'button';
-  button.textContent = text;
-  button.addEventListener('click', onClick);
-  return button;
-};
-
+// Рендер постов
 const renderPosts = (state, element, translate) => {
-  const listGroup = createElement('ul', ['list-group', 'border-0', 'rounded-0']);
+  const listGroup = document.createElement('ul');
+  listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
   state.content.posts.forEach((post) => {
-    const linkClass = state.uiState.visitedLinksIds.has(post.id) ? ['fw-normal', 'link-secondary'] : 'fw-bold';
-    const a = createLink(post.link, '_blank', 'noopener noreferrer', linkClass);
+    const listGroupItem = document.createElement('li');
+    listGroupItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+
+    const a = document.createElement('a');
+    a.classList.add(state.uiState.visitedLinksIds.has(post.id) ? ('fw-normal', 'link-secondary') : 'fw-bold');
+    a.href = post.link;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
     a.setAttribute('data-id', post.id);
     a.textContent = post.title;
 
-    const button = createButton(translate('preview'), () => handlePreviewClick(post.id));
+    const button = document.createElement('button');
+    button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    button.type = 'button';
+    button.setAttribute('data-id', post.id);
+    button.setAttribute('data-bs-toggle', 'modal');
+    button.setAttribute('data-bs-target', '#modal');
+    button.textContent = translate('preview');
 
-    const listGroupItem = createElement('li', [
-      'list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0'
-    ]);
     listGroupItem.append(a, button);
     listGroup.append(listGroupItem);
   });
-
   element.append(listGroup);
 };
 
+// Рендер фидов
 const renderFeeds = (state, element) => {
-  const listGroup = createElement('ul', ['list-group', 'border-0', 'rounded-0']);
+  const listGroup = document.createElement('ul');
+  listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
   state.content.feeds.forEach((feed) => {
-    const h3 = createElement('h3', ['h6', 'm-0']);
+    const listGroupItem = document.createElement('li');
+    listGroupItem.classList.add('list-group-item', 'border-0', 'border-end-0');
+
+    const h3 = document.createElement('h3');
+    h3.classList.add('h6', 'm-0');
     h3.textContent = feed.title;
 
-    const p = createElement('p', ['m-0', 'small', 'text-black-50']);
+    const p = document.createElement('p');
+    p.classList.add('m-0', 'small', 'text-black-50');
     p.textContent = feed.description;
 
-    const listGroupItem = createElement('li', ['list-group-item', 'border-0', 'border-end-0']);
     listGroupItem.append(h3, p);
     listGroup.append(listGroupItem);
   });
-
   element.append(listGroup);
 };
 
+// Создатель контейнеров
 const makeContainer = (title, state, elements, translate) => {
   const containerMapping = {
     posts: (element) => renderPosts(state, element, translate),
@@ -70,9 +63,14 @@ const makeContainer = (title, state, elements, translate) => {
 
   elements[title].innerHTML = '';
 
-  const card = createElement('div', ['card', 'border-0']);
-  const cardBody = createElement('div', ['card-body']);
-  const cardTitle = createElement('h2', ['card-title', 'h4']);
+  const card = document.createElement('div');
+  card.classList.add('card', 'border-0');
+
+  const cardBody = document.createElement('div');
+  cardBody.classList.add('card-body');
+
+  const cardTitle = document.createElement('h2');
+  cardTitle.classList.add('card-title', 'h4');
   cardTitle.textContent = translate(title);
 
   cardBody.append(cardTitle);
@@ -81,15 +79,7 @@ const makeContainer = (title, state, elements, translate) => {
   containerMapping[title](card);
 };
 
-const handlePreviewClick = (postId) => {
-  const post = state.content.posts.find(({ id }) => id === postId);
-  const link = post?.link;
-  if (link) {
-    // Обработка нажатия на кнопку "preview"
-    // ...
-  }
-};
-
+// Обработчик ошибок
 const errorHandler = (elements, error, translate) => {
   elements.feedback.classList.remove('text-success');
   elements.feedback.classList.add('text-danger');
@@ -99,6 +89,7 @@ const errorHandler = (elements, error, translate) => {
   elements.input.disabled = false;
 };
 
+// Обработчик успешного добавления поста
 const finishHandler = (elements, state, translate) => {
   elements.feedback.textContent = '';
 
@@ -115,16 +106,17 @@ const finishHandler = (elements, state, translate) => {
   elements.feedback.textContent = translate('success');
 };
 
+// Заполнение модального окна
 const openModalWindow = (elements, state, postId) => {
-  const post = state.content.posts.find(({ id }) => id === postId);
-  if (post) {
-    const { title, description, link } = post;
-    elements.modal.title.textContent = title;
-    elements.modal.body.textContent = description;
-    elements.modal.btn.href = link;
-  }
+  const post = state.content.posts
+    .find(({ id }) => id === postId);
+  const { title, description, link } = post;
+  elements.modal.title.textContent = title;
+  elements.modal.body.textContent = description;
+  elements.modal.btn.href = link;
 };
 
+// Рендер
 const render = (state, elements, translate) => (path, value) => {
   const renderMapping = {
     filling: () => {
