@@ -118,11 +118,9 @@ const app = () => {
     elements.form.addEventListener('submit', (e) => {
       e.preventDefault();
       const formData = new FormData(elements.form);
-    
       const url = formData.get('url');
       const addedLinks = watchedState.content.feeds.map(({ link }) => link);
       // Проверяем, был ли уже добавлен такой URL RSS-ленты
-      
 
       validate(url, addedLinks)
         .then((link) => {
