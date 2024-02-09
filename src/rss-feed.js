@@ -118,14 +118,11 @@ const app = () => {
     elements.form.addEventListener('submit', (e) => {
       e.preventDefault();
       const formData = new FormData(elements.form);
+    
       const url = formData.get('url');
       const addedLinks = watchedState.content.feeds.map(({ link }) => link);
       // Проверяем, был ли уже добавлен такой URL RSS-ленты
-      if (addedLinks.includes(url)) {
-        watchedState.process.error = 'RSS уже существует'; // Устанавливаем сообщение об ошибке
-        watchedState.process.state = 'error'; // Устанавливаем состояние ошибки
-        return; // Прерываем выполнение функции
-      }
+      
 
       validate(url, addedLinks)
         .then((link) => {
