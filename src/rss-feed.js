@@ -1,6 +1,3 @@
-/* eslint no-param-reassign: ["error", { "props": true,
-"ignorePropertyModificationsFor": ["state", "elements", "watchedState"] }] */
-
 import './styles.scss';
 import 'bootstrap';
 import { setLocale, string } from 'yup';
@@ -15,17 +12,11 @@ import parse from './rssparser.js';
 
 const timeout = 5000;
 
-// rss для тестирования
-// https://lorem-rss.herokuapp.com/feed?unit=second&interval=5
-
-// Валидатор
 const validate = (url, links) => {
-  const schema = string().trim().required().url()
-    .notOneOf(links);
+  const schema = string().trim().required().url().notOneOf(links);
   return schema.validate(url);
 };
 
-// Запрос
 const getAxiosResponse = (url) => {
   const allOriginsLink = 'https://allorigins.hexlet.app/get';
   const preparedURL = new URL(allOriginsLink);
@@ -36,12 +27,12 @@ const getAxiosResponse = (url) => {
 
 const addPosts = (feedId, posts, state) => {
   const preparedPosts = posts.map((post) => ({ ...post, feedId, id: uniqueId() }));
-  state.content.posts = [...state.content.posts, ...preparedPosts];
+  state.content.posts.push(...preparedPosts);
 };
 
 const fetchNewPosts = (state) => {
-  const promises = state.content.feeds
-    .map(({ link, id }) => getAxiosResponse(link)
+  const promises = state.content.feeds.map(({ link, id }) => 
+    getAxiosResponse(link)
       .then((response) => {
         const { posts } = parse(response.data.contents);
         const alreadyAddedLinks = state.content.posts.map((post) => post.link);
@@ -49,18 +40,19 @@ const fetchNewPosts = (state) => {
         if (newPosts.length > 0) {
           addPosts(id, newPosts, state);
         }
-        return Promise.resolve();
-      }));
+      })
+      .catch((error) => {
+        console.error(`Error fetching posts from ${link}:`, error);
+      })
+  );
   Promise.allSettled(promises)
     .finally(() => {
       setTimeout(() => fetchNewPosts(state), timeout);
     });
 };
 
-// Приложение
 const app = () => {
   const i18nInstance = i18n.createInstance();
-  // Инициализация
   i18nInstance.init({
     lng: 'ru',
     debug: false,
@@ -68,7 +60,6 @@ const app = () => {
       ru,
     },
   }).then((translate) => {
-    // Элементы
     const elements = {
       form: document.querySelector('.rss-form'),
       feedback: document.querySelector('.feedback'),
@@ -89,7 +80,6 @@ const app = () => {
       string: { url: 'invalidUrl', required: 'mustNotBeEmpty' },
     });
 
-    // Состояние
     const initialState = {
       process: {
         state: 'filling',
@@ -114,18 +104,15 @@ const app = () => {
       watchedState.process.state = 'filling';
     });
 
-    elements.form.focus();
     elements.form.addEventListener('submit', (e) => {
       e.preventDefault();
       const formData = new FormData(elements.form);
       const url = formData.get('url');
-      const addedLinks = watchedState.content.feeds.map(({ link }) => link);
-      // Проверяем, был ли уже добавлен такой URL RSS-ленты
 
-      validate(url, addedLinks)
-        .then((link) => {
+      validate(url, watchedState.content.feeds.map(({ link }) => link))
+        .then((validUrl) => {
           watchedState.process.state = 'sending';
-          return getAxiosResponse(link);
+          return getAxiosResponse(validUrl);
         })
         .then((response) => {
           const { feed, posts } = parse(response.data.contents);

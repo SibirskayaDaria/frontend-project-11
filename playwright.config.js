@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+const { defineConfig, devices } = require('@playwright/test');
 
 /**
  * Read environment variables from file.
@@ -9,7 +9,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
-export default defineConfig({
+module.exports = defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
