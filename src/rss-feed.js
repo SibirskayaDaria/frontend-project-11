@@ -35,20 +35,18 @@ const addPosts = (feedId, posts, state) => {
 };
 
 const fetchNewPosts = (state) => {
-  const promises = state.content.feeds.map(({ link, id }) => 
-    getAxiosResponse(link)
-      .then((response) => {
-        const { posts } = parse(response.data.contents);
-        const alreadyAddedLinks = state.content.posts.map((post) => post.link);
-        const newPosts = posts.filter((post) => !alreadyAddedLinks.includes(post.link));
-        if (newPosts.length > 0) {
-          addPosts(id, newPosts, state);
-        }
-      })
-      .catch((error) => {
-        console.error(`Error fetching posts from ${link}:`, error);
-      })
-  );
+  const promises = state.content.feeds.map(({ link, id }) => getAxiosResponse(link)
+    .then((response) => {
+      const { posts } = parse(response.data.contents);
+      const alreadyAddedLinks = state.content.posts.map((post) => post.link);
+      const newPosts = posts.filter((post) => !alreadyAddedLinks.includes(post.link));
+      if (newPosts.length > 0) {
+        addPosts(id, newPosts, state);
+      }
+    })
+    .catch((error) => {
+      console.error(`Error fetching posts from ${link}:`, error);
+    }));
   Promise.allSettled(promises)
     .finally(() => {
       setTimeout(() => fetchNewPosts(state), timeout);
