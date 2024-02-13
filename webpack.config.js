@@ -1,4 +1,3 @@
-// @ts-nocheck
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 
@@ -30,16 +29,6 @@ export default {
       {
         test: /\.(ttf|eot|svg)(\?[\s\S]+)?$/,
         use: 'file-loader',
-      },
-      {
-        test: /\.js$/, // Регулярное выражение для выбора JavaScript-файлов
-        exclude: /node_modules/, // Исключение папки node_modules
-        use: {
-          loader: 'babel-loader', // Используем загрузчик Babel
-          options: {
-            presets: ['@babel/preset-env'], // Пресет Babel для поддержки современного JavaScript
-          },
-        },
       },
     ],
   },
