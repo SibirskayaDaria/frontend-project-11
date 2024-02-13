@@ -13,7 +13,11 @@ import parse from './rssparser.js';
 const timeout = 5000;
 
 const validate = (url, links) => {
-  const schema = string().trim().required().url().notOneOf(links);
+  const schema = string()
+    .trim()
+    .required()
+    .url()
+    .notOneOf(links);
   return schema.validate(url);
 };
 
