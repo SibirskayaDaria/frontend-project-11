@@ -1,3 +1,4 @@
+const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
@@ -5,6 +6,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     clean: true,
+    path: path.resolve(__dirname, 'public'), // Устанавливаем каталог вывода как "public"
   },
   devServer: {
     open: true,
@@ -22,11 +24,17 @@ module.exports = {
       },
       {
         test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        use: 'url-loader?limit=10000',
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name].[hash][ext][query]',
+        },
       },
       {
         test: /\.(ttf|eot|svg)(\?[\s\S]+)?$/,
-        use: 'file-loader',
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name].[hash][ext][query]',
+        },
       },
     ],
   },
