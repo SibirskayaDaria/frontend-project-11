@@ -6,7 +6,7 @@ export default {
   entry: './src/index.js',
   output: {
     clean: true,
-    path: path.resolve(__dirname, 'public'), // Устанавливаем каталог вывода как "public"
+    path: path.resolve(process.cwd(), 'public'), // Используем process.cwd() вместо __dirname
   },
   devServer: {
     open: true,
@@ -24,16 +24,20 @@ export default {
       },
       {
         test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[name].[hash][ext][query]',
-        },
+        use: 'url-loader?limit=10000',
       },
       {
         test: /\.(ttf|eot|svg)(\?[\s\S]+)?$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[name].[hash][ext][query]',
+        use: 'file-loader',
+      },
+      {
+        test: /\.js$/, // Регулярное выражение для выбора JavaScript-файлов
+        exclude: /node_modules/, // Исключение папки node_modules
+        use: {
+          loader: 'babel-loader', // Используем загрузчик Babel
+          options: {
+            presets: ['@babel/preset-env'], // Пресет Babel для поддержки современного JavaScript
+          },
         },
       },
     ],
