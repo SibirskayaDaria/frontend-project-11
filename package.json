@@ -8,7 +8,8 @@
       "start": "webpack serve --mode development",
       "build": "webpack --mode production",
       "lint": "eslint .",
-      "test": "jest"
+      "test": "jest",
+      "compile": "webpack --mode production"
     },
     "keywords": [],
     "author": "",
