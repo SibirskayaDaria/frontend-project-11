@@ -2,12 +2,3 @@
 *.log
 coverage
 .DS_Store
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-.vercel
