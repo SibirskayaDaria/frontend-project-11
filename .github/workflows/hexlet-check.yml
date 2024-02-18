@@ -12,7 +12,7 @@ on:
     tags:
       - '**'
 
-jobs:я
+jobs:
   build:
     runs-on: ubuntu-latest
     steps:
